@@ -1,51 +1,62 @@
 import requests
 
 def gerar_playlist():
-    url_api = "https://reidoscanais.my"
-    print("Buscando canais da API...")
+    # Lista de domínios conhecidos da API devido às constantes migrações
+    urls_para_testar = [
+        "https://reidoscanais.cam",
+        "https://reidoscanais.st",
+        "https://reidoscanais.my"
+    ]
     
-    conteudo_m3u = "#EXTM3U\n"
-    canais_adicionados = 0
-    
-    # Cabeçalhos para simular um navegador real e evitar bloqueios da API
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "application/json"
     }
     
-    try:
-        # Adicionado o parâmetro headers na requisição
-        resposta = requests.get(url_api, headers=headers, timeout=15)
-        resposta.raise_for_status()
-        dados = resposta.json()
-        
-        if dados.get("success") and "data" in dados:
-            for canal in dados["data"]:
-                nome = canal.get("name", "Canal Sem Nome")
-                categoria = canal.get("category", "Geral")
-                logo = canal.get("logo_url", "")
-                
-                embeds = canal.get("embeds", [])
-                if embeds and isinstance(embeds, list):
-                    primeiro_embed = embeds[0]
-                    url_transmissao = primeiro_embed.get("embed_url", "")
-                    
-                    if url_transmissao:
-                        conteudo_m3u += f'#EXTINF:-1 tvg-logo="{logo}" group-title="{categoria}",{nome}\n'
-                        conteudo_m3u += f'{url_transmissao}\n'
-                        canais_adicionados += 1
-            print(f"Total de canais processados com link: {canais_adicionados}")
-        else:
-            print("API retornou uma estrutura inválida ou success=False.")
-            conteudo_m3u += "# Erro: API retornou estrutura inválida ou vazia\n"
-            
-    except Exception as e:
-        print(f"Erro ao acessar a API: {e}")
-        conteudo_m3u += f"# Erro ao conectar na API: {e}\n"
+    dados = None
+    url_funcional = None
 
+    # Tenta cada uma das URLs até uma responder com JSON válido
+    for url in urls_para_testar:
+        print(f"Tentando conectar em: {url}")
+        try:
+            resposta = requests.get(url, headers=headers, timeout=10)
+            if resposta.status_code == 200:
+                dados = resposta.json()
+                url_funcional = url
+                print(f"Sucesso ao conectar em: {url}")
+                break
+        except Exception as e:
+            print(f"Falha no domínio {url}: {e}")
+            continue
+
+    conteudo_m3u = "#EXTM3U\n"
+    
+    if dados and dados.get("success") and "data" in dados:
+        canais_adicionados = 0
+        for canal in dados["data"]:
+            nome = canal.get("name", "Canal Sem Nome")
+            categoria = canal.get("category", "Geral")
+            logo = canal.get("logo_url", "")
+            
+            embeds = canal.get("embeds", [])
+            if embeds and isinstance(embeds, list):
+                primeiro_embed = embeds[0]
+                url_transmissao = primeiro_embed.get("embed_url", "")
+                
+                if url_transmissao:
+                    conteudo_m3u += f'#EXTINF:-1 tvg-logo="{logo}" group-title="{categoria}",{nome}\n'
+                    conteudo_m3u += f'{url_transmissao}\n'
+                    canais_adicionados += 1
+        print(f"Total de canais adicionados: {canais_adicionados}")
+    else:
+        print("Nenhum dos domínios da API retornou dados válidos.")
+        conteudo_m3u += "# Erro: Todos os servidores da API falharam ou retornaram blocos vazios\n"
+
+    # Salva o arquivo final
     with open("playlist.m3u", "w", encoding="utf-8") as arquivo:
         arquivo.write(conteudo_m3u)
-    print("Arquivo playlist.m3u gerado!")
+    print("Concluído!")
 
 if __name__ == "__main__":
     gerar_playlist()
