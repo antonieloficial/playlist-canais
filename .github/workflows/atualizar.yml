@@ -2,9 +2,8 @@ name: Atualizar Playlist Diariamente
 
 on:
   schedule:
-    # Executa todos os dias às 06:00 UTC (03:00 no horário de Brasília)
     - cron: '0 6 * * *'
-  workflow_dispatch: # Permite que você execute manualmente quando quiser
+  workflow_dispatch:
 
 jobs:
   build:
@@ -31,4 +30,3 @@ jobs:
         git config --global user.email "actions@github.com"
         git add playlist.m3u
         git diff --quiet && git diff --staged --quiet || (git commit -m "Atualização automática da playlist" && git push)
-        
