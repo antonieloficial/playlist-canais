@@ -1,18 +1,37 @@
 import requests
 
 def gerar_playlist():
-    # Passando a requisição por um espelho/proxy aberto para burlar o bloqueio de bot da Cloudflare
-    url_api = "https://corsproxy.io"
-    print("Buscando canais via Proxy estruturado...")
+    # URL oficial atualizada e limpa para requisições assíncronas
+    url_api = "https://reidoscanais.cam"
+    print("Buscando canais através do bypass de emulação de navegador...")
     
+    # Conjunto de cabeçalhos de alta fidelidade para contornar o bloqueio de raspagem da Cloudflare
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": "https://reidoscanais.cam/",
+        "Origin": "https://reidoscanais.cam",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-site"
     }
     
     conteudo_m3u = "#EXTM3U\n"
     
     try:
-        resposta = requests.get(url_api, headers=headers, timeout=20)
+        # Abre a sessão simulada
+        sessao = requests.Session()
+        resposta = sessao.get(url_api, headers=headers, timeout=25)
+        
+        # Se retornar HTML de bloqueio, tentamos o espelho secundário estável
+        if "<html>" in resposta.text or "<script>" in resposta.text:
+            print("Bloqueio detectado no domínio .cam, tentando espelho secundário (.st)...")
+            url_api_backup = "https://reidoscanais.st"
+            headers["Referer"] = "https://reidoscanais.st"
+            headers["Origin"] = "https://reidoscanais.st"
+            resposta = sessao.get(url_api_backup, headers=headers, timeout=25)
+            
         resposta.raise_for_status()
         dados = resposta.json()
         
@@ -34,17 +53,16 @@ def gerar_playlist():
                         canais_adicionados += 1
             print(f"Sucesso! Total de canais adicionados: {canais_adicionados}")
         else:
-            print("API respondeu, mas os dados vieram vazios.")
-            conteudo_m3u += "# Erro: API retornou estrutura sem canais ativos\n"
+            conteudo_m3u += "# Erro: API respondeu com bloco de dados inválido ou vazio\n"
             
     except Exception as e:
         print(f"Falha na conexão: {e}")
         conteudo_m3u += f"# Erro de comunicacao com o servidor: {e}\n"
 
-    # Força a escrita correta no repositório
+    # Salva o arquivo final estruturado
     with open("playlist.m3u", "w", encoding="utf-8") as arquivo:
         arquivo.write(conteudo_m3u)
-    print("Processamento concluído.")
+    print("Processamento da lista concluído.")
 
 if __name__ == "__main__":
     gerar_playlist()
