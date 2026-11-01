@@ -1,2 +1,5 @@
 #EXTM3U
-# Erro de comunicacao com o servidor: Expecting value: line 1 column 1 (char 0)
+#EXTINF:-1 tvg-logo='https://reidoscanais.st' group-title='Geral',Globo SP ao Vivo
+https://reidoscanais.st
+#EXTINF:-1 tvg-logo='https://reidoscanais.st' group-title='Esportes',Premiere Clubes
+https://reidoscanais.st
