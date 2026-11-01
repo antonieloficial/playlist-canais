@@ -17,7 +17,7 @@ jobs:
     - name: Configurar o Python
       uses: actions/setup-python@v4
       with:
-        python-python: '3.x'
+        python-version: '3.x'
 
     - name: Instalar dependências de rede
       run: pip install requests
