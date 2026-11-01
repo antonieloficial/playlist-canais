@@ -17,6 +17,7 @@ def gerar_playlist():
         return
 
     conteudo_m3u = "#EXTM3U\n"
+    canais_adicionados = 0
 
     for canal in dados["data"]:
         nome = canal.get("name", "Canal Sem Nome")
@@ -24,20 +25,24 @@ def gerar_playlist():
         logo = canal.get("logo_url", "")
         
         embeds = canal.get("embeds", [])
-        if not embeds:
-            continue
-            
-        # Correção aqui: pega o primeiro item da lista de embeds
-        url_transmissao = embeds[0].get("embed_url", "")
         
-        if url_transmissao:
-            conteudo_m3u += f'#EXTINF:-1 tvg-logo="{logo}" group-title="{categoria}",{nome}\n'
-            conteudo_m3u += f'{url_transmissao}\n'
+        # Correção aqui: Verifica se a lista de embeds não está vazia e pega o primeiro item
+        if embeds and isinstance(embeds, list):
+            primeiro_embed = embeds[0]
+            url_transmissao = primeiro_embed.get("embed_url", "")
+            
+            if url_transmissao:
+                conteudo_m3u += f'#EXTINF:-1 tvg-logo="{logo}" group-title="{categoria}",{nome}\n'
+                conteudo_m3u += f'{url_transmissao}\n'
+                canais_adicionados += 1
 
+    print(f"Total de canais processados com link: {canais_adicionados}")
+
+    # Grava o arquivo localmente
     with open("playlist.m3u", "w", encoding="utf-8") as arquivo:
         arquivo.write(conteudo_m3u)
-    print("Playlist (.m3u) gerada com sucesso!")
+    print("Arquivo playlist.m3u salvo com sucesso!")
 
 if __name__ == "__main__":
     gerar_playlist()
-            
+    
